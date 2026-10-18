@@ -11,27 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Command govc_exporter exposes VMware vCenter metrics for Prometheus.
 package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"sort"
 
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
+	"github.com/prometheus/common/promslog"
+	"github.com/prometheus/common/promslog/flag"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/intrinsec/govc_exporter/collector"
 	"github.com/intrinsec/govc_exporter/https"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 // handler wraps an unfiltered http.Handler but uses a filtered handler,
@@ -44,10 +45,10 @@ type handler struct {
 	exporterMetricsRegistry *prometheus.Registry
 	includeExporterMetrics  bool
 	maxRequests             int
-	logger                  log.Logger
+	logger                  *slog.Logger
 }
 
-func newHandler(includeExporterMetrics bool, maxRequests int, logger log.Logger) *handler {
+func newHandler(includeExporterMetrics bool, maxRequests int, logger *slog.Logger) *handler {
 	h := &handler{
 		exporterMetricsRegistry: prometheus.NewRegistry(),
 		includeExporterMetrics:  includeExporterMetrics,
@@ -60,18 +61,18 @@ func newHandler(includeExporterMetrics bool, maxRequests int, logger log.Logger)
 			collectors.NewGoCollector(),
 		)
 	}
-	if innerHandler, err := h.innerHandler(); err != nil {
+	innerHandler, err := h.innerHandler()
+	if err != nil {
 		panic(fmt.Sprintf("Couldn't create metrics handler: %s", err))
-	} else {
-		h.unfilteredHandler = innerHandler
 	}
+	h.unfilteredHandler = innerHandler
 	return h
 }
 
 // ServeHTTP implements http.Handler.
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	filters := r.URL.Query()["collect[]"]
-	level.Debug(h.logger).Log("msg", "collect query:", "filters", filters)
+	h.logger.Debug("collect query:", "filters", filters)
 
 	if len(filters) == 0 {
 		// No filters, use the prepared unfiltered handler.
@@ -81,9 +82,8 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// To serve filtered metrics, we create a filtering handler on the fly.
 	filteredHandler, err := h.innerHandler(filters...)
 	if err != nil {
-		level.Warn(h.logger).Log("msg", "Couldn't create filtered metrics handler:", "err", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("Couldn't create filtered metrics handler: %s", err)))
+		h.logger.Warn("Couldn't create filtered metrics handler:", "err", err)
+		http.Error(w, fmt.Sprintf("Couldn't create filtered metrics handler: %s", err), http.StatusBadRequest)
 		return
 	}
 	filteredHandler.ServeHTTP(w, r)
@@ -103,19 +103,19 @@ func (h *handler) innerHandler(filters ...string) (http.Handler, error) {
 	// Only log the creation of an unfiltered handler, which should happen
 	// only once upon startup.
 	if len(filters) == 0 {
-		level.Info(h.logger).Log("msg", "Enabled collectors")
+		h.logger.Info("Enabled collectors")
 		collectors := []string{}
 		for n := range nc.Collectors {
 			collectors = append(collectors, n)
 		}
 		sort.Strings(collectors)
 		for _, c := range collectors {
-			level.Info(h.logger).Log("collector", c)
+			h.logger.Info("collector", "collector", c)
 		}
 	}
 
 	r := prometheus.NewRegistry()
-	r.MustRegister(version.NewCollector("node_exporter"))
+	r.MustRegister(versioncollector.NewCollector("govc_exporter"))
 	if err := r.Register(nc); err != nil {
 		return nil, fmt.Errorf("couldn't register node collector: %s", err)
 	}
@@ -165,21 +165,21 @@ func main() {
 		).Default("").String()
 	)
 
-	promlogConfig := &promlog.Config{}
-	flag.AddFlags(kingpin.CommandLine, promlogConfig)
-	kingpin.Version(version.Print("node_exporter"))
+	promslogConfig := &promslog.Config{}
+	flag.AddFlags(kingpin.CommandLine, promslogConfig)
+	kingpin.Version(version.Print("govc_exporter"))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
-	logger := promlog.New(promlogConfig)
+	logger := promslog.New(promslogConfig)
 
 	if *disableDefaultCollectors {
 		collector.DisableDefaultCollectors()
 	}
-	level.Info(logger).Log("msg", "Starting govc_exporter", "version", version.Info())
-	level.Info(logger).Log("msg", "Build context", "build_context", version.BuildContext())
+	logger.Info("Starting govc_exporter", "version", version.Info())
+	logger.Info("Build context", "build_context", version.BuildContext())
 
 	http.Handle(*metricsPath, newHandler(!*disableExporterMetrics, *maxRequests, logger))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		w.Write([]byte(`<html>
 			<head><title>govc Exporter</title></head>
 			<body>
@@ -189,10 +189,10 @@ func main() {
 			</html>`))
 	})
 
-	level.Info(logger).Log("msg", "Listening on", "address", *listenAddress)
+	logger.Info("Listening on", "address", *listenAddress)
 	server := &http.Server{Addr: *listenAddress}
 	if err := https.Listen(server, *configFile, logger); err != nil {
-		level.Error(logger).Log("err", err)
+		logger.Error("failed to start server", "err", err)
 		os.Exit(1)
 	}
 }

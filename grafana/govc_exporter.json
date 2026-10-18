@@ -1,0 +1,4064 @@
+{
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.4.0"
+    },
+    {
+      "type": "datasource",
+      "id": "victoriametrics-metrics-datasource",
+      "name": "VictoriaMetrics",
+      "version": "0.15.0"
+    }
+  ],
+  "uid": "govc-exporter",
+  "title": "VMware vCenter (govc_exporter)",
+  "description": "vCenter inventory and capacity from govc_exporter, VictoriaMetrics datasource.",
+  "tags": [
+    "vmware",
+    "vcenter",
+    "govc_exporter"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "5m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "10m",
+      "15m",
+      "30m",
+      "1h"
+    ]
+  },
+  "schemaVersion": 41,
+  "version": 1,
+  "annotations": {
+    "list": []
+  },
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "name": "lookback",
+        "label": "Lookback",
+        "type": "custom",
+        "query": "15m,20m,30m,1h",
+        "current": {
+          "text": "15m",
+          "value": "15m"
+        },
+        "options": [],
+        "multi": false,
+        "includeAll": false,
+        "description": "How far instant panels look back for the last sample. Keep above the scrape interval."
+      },
+      {
+        "name": "datasource",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "victoriametrics-metrics-datasource",
+        "refresh": 1,
+        "regex": "",
+        "current": {},
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_scrape_collector_success, job)",
+          "refId": "job-var"
+        },
+        "definition": "label_values(govc_scrape_collector_success, job)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      },
+      {
+        "name": "vc",
+        "label": "vCenter",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_esx_uptime_seconds{job=~\"$job\"}, vc)",
+          "refId": "vc-var"
+        },
+        "definition": "label_values(govc_esx_uptime_seconds{job=~\"$job\"}, vc)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      },
+      {
+        "name": "dc",
+        "label": "Datacenter",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\"}, dc)",
+          "refId": "dc-var"
+        },
+        "definition": "label_values(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\"}, dc)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      },
+      {
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}, cluster)",
+          "refId": "cluster-var"
+        },
+        "definition": "label_values(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}, cluster)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      },
+      {
+        "name": "esx",
+        "label": "ESX host",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\"}, name)",
+          "refId": "esx-var"
+        },
+        "definition": "label_values(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\"}, name)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      },
+      {
+        "name": "pool",
+        "label": "Resource pool",
+        "type": "query",
+        "datasource": {
+          "type": "victoriametrics-metrics-datasource",
+          "uid": "${datasource}"
+        },
+        "query": {
+          "query": "label_values(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\"}, pool)",
+          "refId": "pool-var"
+        },
+        "definition": "label_values(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\"}, pool)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [],
+        "regex": ""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Exporter",
+      "id": 1,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Collectors failed",
+      "id": 2,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(last_over_time(govc_scrape_collector_success{job=~\"$job\"}[$lookback]) == 0) or vector(0)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "description": "Number of collectors whose last run failed."
+    },
+    {
+      "type": "stat",
+      "title": "VM collector duration",
+      "id": 3,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(govc_scrape_collector_duration_seconds{job=~\"$job\",collector=\"vm\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "description": "The vm collector dominates the scrape time. Keep scrape_interval and scrape_timeout well above this value."
+    },
+    {
+      "type": "stat",
+      "title": "Scrape duration",
+      "id": 4,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(scrape_duration_seconds{job=~\"$job\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "description": "Full scrape duration as measured by vmagent / VictoriaMetrics."
+    },
+    {
+      "type": "stat",
+      "title": "Target up",
+      "id": 5,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "min(last_over_time(up{job=~\"$job\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Series per scrape",
+      "id": 6,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(scrape_samples_scraped{job=~\"$job\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Exporter RSS",
+      "id": 7,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(last_over_time(process_resident_memory_bytes{job=~\"$job\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Collector duration",
+      "id": 8,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (collector) (govc_scrape_collector_duration_seconds{job=~\"$job\"})",
+          "refId": "A",
+          "legendFormat": "{{collector}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(scrape_duration_seconds{job=~\"$job\"})",
+          "refId": "B",
+          "legendFormat": "total scrape",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max(scrape_timeout_seconds{job=~\"$job\"})",
+          "refId": "C",
+          "legendFormat": "scrape timeout",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "Per-collector Update() duration. If 'total scrape' approaches 'scrape timeout', scrapes start failing."
+    },
+    {
+      "type": "timeseries",
+      "title": "Collector success",
+      "id": 9,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "min by (collector) (govc_scrape_collector_success{job=~\"$job\"})",
+          "refId": "A",
+          "legendFormat": "{{collector}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "max": 1,
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Overview",
+      "id": 10,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "VMs",
+      "id": 11,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "VMs powered on",
+      "id": 12,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\"}[$lookback]))) or vector(0)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ESX hosts",
+      "id": 13,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (vc, dc, cluster, name) (last_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Datastores",
+      "id": 14,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (vc, dc, name) (last_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cluster CPU usage",
+      "id": 15,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_used_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) / sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cluster memory usage",
+      "id": 16,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_used_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) / sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_avail_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Datastore usage",
+      "id": 17,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * (1 - sum(max by (vc, dc, name) (last_over_time(govc_ds_free_space_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))) / sum(max by (vc, dc, name) (last_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Provisioned VM disks",
+      "id": 18,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 14
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(last_over_time(govc_vm_disk_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Physical cores",
+      "id": 19,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cores used",
+      "id": 20,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_used_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) / (max by (vc, dc, cluster, name) (last_over_time(govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) / max by (vc, dc, cluster, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "description": "Host CPU usage converted to physical cores at nominal clock (used MHz / MHz per core)."
+    },
+    {
+      "type": "stat",
+      "title": "vCPU allocated (powered on)",
+      "id": 21,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_cpu_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "vCPU : physical core ratio",
+      "id": 22,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_cpu_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\"}[$lookback]))) / sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "vRAM allocated (powered on)",
+      "id": 23,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "vRAM : physical RAM",
+      "id": 24,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\"}[$lookback]))) / sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_avail_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Powered-on VMs without tools",
+      "id": 25,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "count(count by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\",tools_status!=\"toolsOk\"}[$lookback]))) or vector(0)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ESX reboot required",
+      "id": 26,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 18
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (vc, dc, cluster, name) (last_over_time(govc_esx_reboot_required{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      }
+    },
+    {
+      "type": "row",
+      "title": "ESX hosts",
+      "id": 27,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "ESX CPU usage",
+      "id": 28,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * max by (vc, dc, cluster, name) (govc_esx_used_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}) / max by (vc, dc, cluster, name) (govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"})",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "ESX memory usage",
+      "id": 29,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * max by (vc, dc, cluster, name) (govc_esx_used_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}) / max by (vc, dc, cluster, name) (govc_esx_avail_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"})",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "ESX hosts",
+      "id": 30,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "B",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(100 * max by (vc, dc, name) (last_over_time(govc_esx_used_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "C",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(100 * max by (vc, dc, name) (last_over_time(govc_esx_used_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_esx_avail_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "D",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_esx_avail_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "E",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_esx_reboot_required{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback]))) * on (vc, dc, name) group_left (cluster, version, status, connection_state, power_state, maintenance_mode, standby_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_esx_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",name=~\"$esx\"}[$lookback])) * 0 + 1)",
+          "refId": "F",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "custom.minWidth",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reboot required"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "no",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "YES",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "green": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "yellow": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "red": {
+                        "color": "red",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "custom.minWidth",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cores"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "vc": true,
+              "dc": true
+            },
+            "renameByName": {
+              "name": "Host",
+              "cluster": "Cluster",
+              "version": "Version",
+              "connection_state": "Connection",
+              "power_state": "Power",
+              "maintenance_mode": "Maintenance",
+              "standby_mode": "Standby",
+              "status": "Status",
+              "Value #A": "Uptime",
+              "Value #B": "Cores",
+              "Value #C": "CPU %",
+              "Value #D": "Memory %",
+              "Value #E": "Memory",
+              "Value #F": "Reboot required"
+            },
+            "indexByName": {
+              "name": 0,
+              "Value #C": 1,
+              "Value #D": 2,
+              "Value #B": 3,
+              "Value #E": 4,
+              "cluster": 5,
+              "version": 6,
+              "status": 7,
+              "connection_state": 8,
+              "power_state": 9,
+              "maintenance_mode": 10,
+              "standby_mode": 11,
+              "Value #A": 12,
+              "Value #F": 13
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Datastores",
+      "id": 31,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "panels": []
+    },
+    {
+      "type": "bargauge",
+      "title": "Datastore usage",
+      "id": 32,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 10,
+        "x": 0,
+        "y": 39
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "sort_desc(100 * (1 - max by (vc, dc, name) (last_over_time(govc_ds_free_space_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))))",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 75
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Datastore free space",
+      "id": 33,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 14,
+        "x": 10,
+        "y": 39
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_ds_free_space_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"})",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "min"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Datastores",
+      "id": 34,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))) * on (vc, dc, name) group_left (type, maintenance_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) * 0 + 1)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_ds_free_space_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))) * on (vc, dc, name) group_left (type, maintenance_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) * 0 + 1)",
+          "refId": "B",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(100 * (1 - max by (vc, dc, name) (last_over_time(govc_ds_free_space_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])))) * on (vc, dc, name) group_left (type, maintenance_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) * 0 + 1)",
+          "refId": "C",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, name) (last_over_time(govc_ds_accessible{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback]))) * on (vc, dc, name) group_left (type, maintenance_mode) (topk by (vc, dc, name) (1, tlast_over_time(govc_ds_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) * 0 + 1)",
+          "refId": "D",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Capacity"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Free"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Used %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Accessible"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "NO",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "yes",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Used %",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "vc": true,
+              "cluster": true
+            },
+            "renameByName": {
+              "name": "Datastore",
+              "dc": "Datacenter",
+              "type": "Type",
+              "maintenance_mode": "Maintenance",
+              "Value #A": "Capacity",
+              "Value #B": "Free",
+              "Value #C": "Used %",
+              "Value #D": "Accessible"
+            },
+            "indexByName": {
+              "name": 0,
+              "dc": 1,
+              "type": 2,
+              "maintenance_mode": 3,
+              "Value #C": 4,
+              "Value #A": 5,
+              "Value #B": 6,
+              "Value #D": 7
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Resource pools",
+      "id": 35,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Resource pool CPU",
+      "id": 36,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_used_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"}) * 1e6",
+          "refId": "A",
+          "legendFormat": "{{name}} used",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_demanded_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"}) * 1e6",
+          "refId": "B",
+          "legendFormat": "{{name}} demand",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Resource pool memory",
+      "id": 37,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_host_used_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"})",
+          "refId": "A",
+          "legendFormat": "{{name}} host used",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_guest_used_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"})",
+          "refId": "B",
+          "legendFormat": "{{name}} guest used",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_mem_limit_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"}) > 0",
+          "refId": "C",
+          "legendFormat": "{{name}} limit",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Resource pool memory pressure",
+      "id": 38,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_ballooned_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"})",
+          "refId": "A",
+          "legendFormat": "{{name}} ballooned",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_swapped_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"})",
+          "refId": "B",
+          "legendFormat": "{{name}} swapped",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, name) (govc_respool_compressed_mem_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",name=~\"$pool\"})",
+          "refId": "C",
+          "legendFormat": "{{name}} compressed",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "Non-zero ballooned / swapped / compressed memory means hosts are overcommitted."
+    },
+    {
+      "type": "row",
+      "title": "Virtual machines",
+      "id": 39,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 73
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 10 VMs by CPU usage",
+      "id": 40,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 74
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, max by (vc, dc, cluster, esx, pool, name) (govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}) * 1e6)",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 10 VMs by host memory usage",
+      "id": 41,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 74
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, max by (vc, dc, cluster, esx, pool, name) (govc_vm_host_memory_usage_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}))",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 10 VMs by vCPU used",
+      "id": 42,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 83
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, (max by (vc, dc, cluster, esx, pool, name) (govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"})) / on (vc, dc, esx) group_left () label_copy(max by (vc, dc, name) (govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}) / max by (vc, dc, name) (govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}), \"name\", \"esx\"))",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "CPU usage in physical cores of the current host at nominal clock. Can exceed allocated vCPUs with Turbo Boost."
+    },
+    {
+      "type": "timeseries",
+      "title": "Top 10 VMs by CPU % of allocated vCPU",
+      "id": 43,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 83
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, 100 * (max by (vc, dc, cluster, esx, pool, name) (govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"})) / ((max by (vc, dc, cluster, esx, pool, name) (govc_vm_cpu_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"})) * on (vc, dc, esx) group_left () label_copy(max by (vc, dc, name) (govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}) / max by (vc, dc, name) (govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}), \"name\", \"esx\")))",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "Usage / (vCPUs * MHz per core of the current host), as vCenter shows it. Can exceed 100% with Turbo Boost."
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU demand vs usage (ready-time proxy)",
+      "id": 44,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 92
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, max by (vc, dc, cluster, esx, pool, name) (govc_vm_overall_cpu_demand_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}) - max by (vc, dc, cluster, esx, pool, name) (govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}) > 0) * 1e6",
+          "refId": "A",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "hertz"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "Demand above usage means the VM wants more CPU than it gets (contention)."
+    },
+    {
+      "type": "timeseries",
+      "title": "VMs with ballooned / swapped memory",
+      "id": 45,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 92
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, cluster, esx, pool, name) (govc_vm_ballooned_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}) > 0",
+          "refId": "A",
+          "legendFormat": "{{name}} ballooned",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, cluster, esx, pool, name) (govc_vm_swapped_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}) > 0",
+          "refId": "B",
+          "legendFormat": "{{name}} swapped",
+          "range": true,
+          "instant": false,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Last *",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "VM inventory",
+      "id": 46,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 100
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_cpu_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "B",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "C",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_guest_memory_usage_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "D",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(sum by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_disk_capacity_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "E",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_snapshot_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "F",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_uptime_seconds{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "G",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "((max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) / on (vc, dc, esx) group_left () label_copy(max by (vc, dc, name) (last_over_time(govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])), \"name\", \"esx\")) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "H",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "(100 * (max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_overall_cpu_usage_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) / ((max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_cpu_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback]))) * on (vc, dc, esx) group_left () label_copy(max by (vc, dc, name) (last_over_time(govc_esx_avail_cpu_mhz{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])) / max by (vc, dc, name) (last_over_time(govc_esx_cpu_cores_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\"}[$lookback])), \"name\", \"esx\"))) * on (vc, dc, cluster, esx, pool, name) group_left (hostname, guestfullname, power_state, tools_status) (topk by (vc, dc, cluster, esx, pool, name) (1, tlast_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) * 0 + 1)",
+          "refId": "I",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vRAM"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Guest mem used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Disks"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU usage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "MHz"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vCPU used"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU % of vCPU"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 75
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Snapshots"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 3
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Power"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "poweredOn": {
+                        "text": "on",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "poweredOff": {
+                        "text": "off",
+                        "color": "text",
+                        "index": 1
+                      },
+                      "suspended": {
+                        "text": "suspended",
+                        "color": "yellow",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tools"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "toolsOk": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "toolsOld": {
+                        "color": "yellow",
+                        "index": 1
+                      },
+                      "toolsNotRunning": {
+                        "color": "orange",
+                        "index": 2
+                      },
+                      "toolsNotInstalled": {
+                        "color": "red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "vCPU used",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "vc": true,
+              "dc": true,
+              "overall_status": true,
+              "tools_version": true
+            },
+            "renameByName": {
+              "name": "VM",
+              "hostname": "Guest hostname",
+              "guestfullname": "Guest OS",
+              "cluster": "Cluster",
+              "esx": "ESX",
+              "pool": "Pool",
+              "power_state": "Power",
+              "tools_status": "Tools",
+              "Value #A": "vCPU",
+              "Value #B": "vRAM",
+              "Value #C": "CPU usage",
+              "Value #D": "Guest mem used",
+              "Value #E": "Disks",
+              "Value #F": "Snapshots",
+              "Value #G": "Uptime",
+              "Value #H": "vCPU used",
+              "Value #I": "CPU % of vCPU"
+            },
+            "indexByName": {
+              "name": 0,
+              "power_state": 1,
+              "tools_status": 2,
+              "guestfullname": 3,
+              "hostname": 4,
+              "cluster": 5,
+              "esx": 6,
+              "pool": 7,
+              "Value #A": 8,
+              "Value #H": 9,
+              "Value #I": 10,
+              "Value #C": 11,
+              "Value #B": 12,
+              "Value #D": 13,
+              "Value #E": 14,
+              "Value #F": 15,
+              "Value #G": 16
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "VMs with snapshots",
+      "id": 47,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 112
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, cluster, esx, pool, name) (last_over_time(govc_vm_snapshot_number_total{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\"}[$lookback])) > 0",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Snapshots",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "vc": true,
+              "dc": true,
+              "overall_status": true,
+              "tools_version": true
+            },
+            "renameByName": {
+              "name": "VM",
+              "hostname": "Guest hostname",
+              "guestfullname": "Guest OS",
+              "cluster": "Cluster",
+              "esx": "ESX",
+              "pool": "Pool",
+              "power_state": "Power",
+              "tools_status": "Tools",
+              "Value": "Snapshots"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Powered-on VMs with tools not OK",
+      "id": 48,
+      "datasource": {
+        "type": "victoriametrics-metrics-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 112
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-metrics-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (vc, dc, cluster, esx, pool, name, tools_status, tools_version) (last_over_time(govc_vm_memory_bytes{job=~\"$job\",vc=~\"$vc\",dc=~\"$dc\",cluster=~\"$cluster\",esx=~\"$esx\",pool=~\"$pool\",power_state=\"poweredOn\",tools_status!=\"toolsOk\"}[$lookback]))",
+          "refId": "A",
+          "legendFormat": "__auto",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "vc": true,
+              "dc": true,
+              "Value": true
+            },
+            "renameByName": {
+              "name": "VM",
+              "hostname": "Guest hostname",
+              "guestfullname": "Guest OS",
+              "cluster": "Cluster",
+              "esx": "ESX",
+              "pool": "Pool",
+              "power_state": "Power",
+              "tools_status": "Tools",
+              "tools_version": "Tools version"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

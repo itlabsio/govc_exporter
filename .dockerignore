@@ -1,7 +1,10 @@
+.git/
+.github/
+.circleci/
 .build/
 .tarballs/
-
-!.build/linux-amd64
-!.build/linux-armv7
-!.build/linux-arm64
-!.build/linux-ppc64le
+dist/
+grafana/
+/govc_exporter
+/vc_exporter
+*.md

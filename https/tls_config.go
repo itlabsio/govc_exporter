@@ -17,12 +17,12 @@ package https
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/pkg/errors"
 	config_util "github.com/prometheus/common/config"
 	"gopkg.in/yaml.v2"
 )
@@ -31,11 +31,13 @@ var (
 	errNoTLSConfig = errors.New("TLS config is not present")
 )
 
+// Config is the web configuration file: TLS settings and basic auth users.
 type Config struct {
 	TLSConfig TLSStruct                     `yaml:"tls_config"`
 	Users     map[string]config_util.Secret `yaml:"basic_auth_users"`
 }
 
+// TLSStruct holds the TLS settings of the web configuration file.
 type TLSStruct struct {
 	TLSCertPath string `yaml:"cert_file"`
 	TLSKeyPath  string `yaml:"key_file"`
@@ -44,7 +46,7 @@ type TLSStruct struct {
 }
 
 func getConfig(configPath string) (*Config, error) {
-	content, err := ioutil.ReadFile(configPath)
+	content, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +81,7 @@ func ConfigToTLSConfig(c *TLSStruct) (*tls.Config, error) {
 	loadCert := func() (*tls.Certificate, error) {
 		cert, err := tls.LoadX509KeyPair(c.TLSCertPath, c.TLSKeyPath)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to load X509KeyPair")
+			return nil, fmt.Errorf("failed to load X509KeyPair: %w", err)
 		}
 		return &cert, nil
 	}
@@ -93,7 +95,7 @@ func ConfigToTLSConfig(c *TLSStruct) (*tls.Config, error) {
 
 	if c.ClientCAs != "" {
 		clientCAPool := x509.NewCertPool()
-		clientCAFile, err := ioutil.ReadFile(c.ClientCAs)
+		clientCAFile, err := os.ReadFile(c.ClientCAs)
 		if err != nil {
 			return nil, err
 		}
@@ -117,16 +119,16 @@ func ConfigToTLSConfig(c *TLSStruct) (*tls.Config, error) {
 	}
 
 	if c.ClientCAs != "" && cfg.ClientAuth == tls.NoClientCert {
-		return nil, errors.New("Client CA's have been configured without a Client Auth Policy")
+		return nil, errors.New("client CA's have been configured without a client auth policy")
 	}
 
 	return cfg, nil
 }
 
 // Listen starts the server on the given address. If tlsConfigPath isn't empty the server connection will be started using TLS.
-func Listen(server *http.Server, tlsConfigPath string, logger log.Logger) error {
+func Listen(server *http.Server, tlsConfigPath string, logger *slog.Logger) error {
 	if tlsConfigPath == "" {
-		level.Info(logger).Log("msg", "TLS is disabled and it cannot be enabled on the fly.")
+		logger.Info("TLS is disabled and it cannot be enabled on the fly.")
 		return server.ListenAndServe()
 	}
 
@@ -149,10 +151,10 @@ func Listen(server *http.Server, tlsConfigPath string, logger log.Logger) error 
 	switch err {
 	case nil:
 		// Valid TLS config.
-		level.Info(logger).Log("msg", "TLS is enabled and it cannot be disabled on the fly.")
+		logger.Info("TLS is enabled and it cannot be disabled on the fly.")
 	case errNoTLSConfig:
 		// No TLS config, back to plain HTTP.
-		level.Info(logger).Log("msg", "TLS is disabled and it cannot be enabled on the fly.")
+		logger.Info("TLS is disabled and it cannot be enabled on the fly.")
 		return server.ListenAndServe()
 	default:
 		// Invalid TLS config.

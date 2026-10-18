@@ -14,9 +14,9 @@
 package https
 
 import (
+	"log/slog"
 	"net/http"
 
-	"github.com/go-kit/kit/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -39,13 +39,13 @@ func validateUsers(configPath string) error {
 type userAuthRoundtrip struct {
 	tlsConfigPath string
 	handler       http.Handler
-	logger        log.Logger
+	logger        *slog.Logger
 }
 
 func (u *userAuthRoundtrip) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c, err := getConfig(u.tlsConfigPath)
 	if err != nil {
-		u.logger.Log("msg", "Unable to parse configuration", "err", err)
+		u.logger.Error("Unable to parse configuration", "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
