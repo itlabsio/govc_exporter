@@ -31,6 +31,41 @@ export VC_PASSWORD=FIXME
 ./govc_exporter <flags>
 ```
 
+### Docker
+
+Images for `linux/amd64` are published to GitHub Container Registry:
+`edge` from `master`, `X.Y.Z` / `X.Y` from `vX.Y.Z` tags, plus `sha-<commit>`.
+
+```shell
+docker run -d -p 9752:9752 \
+  -e VC_URL=https://vcenter.example.com -e VC_USERNAME=FIXME -e VC_PASSWORD=FIXME \
+  ghcr.io/itlabsio/govc_exporter:edge
+```
+
+Prebuilt binaries for `linux/amd64`, `darwin/arm64` and `windows/amd64` are attached to GitHub releases.
+
+### Scraping
+
+Every scrape logs in to vCenter and walks the whole inventory, and the `vm`
+collector issues a couple of API calls per VM. A scrape takes tens of seconds
+on a few hundred VMs, so scrape rarely and with a generous timeout:
+
+```yaml
+scrape_configs:
+  - job_name: govc
+    scrape_interval: 5m
+    scrape_timeout: 2m
+    static_configs:
+      - targets: ["govc-exporter:9752"]
+```
+
+### Grafana dashboard
+
+[grafana/govc_exporter.json](grafana/govc_exporter.json) targets Grafana 12.4+
+with the `victoriametrics-metrics-datasource` plugin. Instant panels read the
+last sample within the `$lookback` window (15m by default); keep it above the
+scrape interval.
+
 ### Usage
 
 ```shell

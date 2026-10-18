@@ -18,9 +18,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"sync"
 	"testing"
@@ -29,7 +31,7 @@ import (
 
 var (
 	port       = getPort()
-	testlogger = &testLogger{}
+	testlogger = slog.New(slog.DiscardHandler)
 
 	ErrorMap = map[string]*regexp.Regexp{
 		"HTTP Response to HTTPS":       regexp.MustCompile(`server gave HTTP response to HTTPS client`),
@@ -41,18 +43,12 @@ var (
 		"HTTP Request to HTTPS server": regexp.MustCompile(`HTTP`),
 		"Invalid CertPath":             regexp.MustCompile(`missing cert_file`),
 		"Invalid KeyPath":              regexp.MustCompile(`missing key_file`),
-		"ClientCA set without policy":  regexp.MustCompile(`Client CA's have been configured without a Client Auth Policy`),
+		"ClientCA set without policy":  regexp.MustCompile(`client CA's have been configured without a client auth policy`),
 		"Bad password":                 regexp.MustCompile(`hashedSecret too short to be a bcrypted password`),
 		"Unauthorized":                 regexp.MustCompile(`Unauthorized`),
 		"Forbidden":                    regexp.MustCompile(`Forbidden`),
 	}
 )
-
-type testLogger struct{}
-
-func (t *testLogger) Log(keyvals ...interface{}) error {
-	return nil
-}
 
 func getPort() string {
 	listener, err := net.Listen("tcp", ":0")
@@ -197,7 +193,7 @@ func TestConfigReloading(t *testing.T) {
 
 	server := &http.Server{
 		Addr: port,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Write([]byte("Hello World!"))
 		}),
 	}
@@ -223,7 +219,7 @@ func TestConfigReloading(t *testing.T) {
 		if err != nil {
 			return (err)
 		}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			return (err)
 		}
@@ -274,7 +270,7 @@ func (test *TestInputs) Test(t *testing.T) {
 	} else {
 		server = &http.Server{
 			Addr: port,
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.Write([]byte("Hello World!"))
 			}),
 		}
@@ -318,7 +314,7 @@ func (test *TestInputs) Test(t *testing.T) {
 			recordConnectionError(err)
 			return
 		}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			recordConnectionError(err)
 			return
@@ -352,7 +348,7 @@ func (test *TestInputs) isCorrectError(returnedError error) bool {
 }
 
 func getTLSClient() *http.Client {
-	cert, err := ioutil.ReadFile("testdata/tls-ca-chain.pem")
+	cert, err := os.ReadFile("testdata/tls-ca-chain.pem")
 	if err != nil {
 		panic("Unable to start TLS client. Check cert path")
 	}
@@ -371,19 +367,19 @@ func getTLSClient() *http.Client {
 }
 
 func swapFileContents(file1, file2 string) error {
-	content1, err := ioutil.ReadFile(file1)
+	content1, err := os.ReadFile(file1)
 	if err != nil {
 		return err
 	}
-	content2, err := ioutil.ReadFile(file2)
+	content2, err := os.ReadFile(file2)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(file1, content2, 0644)
+	err = os.WriteFile(file1, content2, 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(file2, content1, 0644)
+	err = os.WriteFile(file2, content1, 0644)
 	if err != nil {
 		return err
 	}

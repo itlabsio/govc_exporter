@@ -11,17 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build !noesx
 // +build !noesx
 
 package collector
 
 import (
 	"encoding/json"
+	"log/slog"
 	"strconv"
 	"strings"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/view"
@@ -67,7 +67,7 @@ func init() {
 }
 
 // NewVirtualMachineCollector returns a new Collector exposing IpTables stats.
-func NewVirtualMachineCollector(logger log.Logger) (Collector, error) {
+func NewVirtualMachineCollector(logger *slog.Logger) (Collector, error) {
 
 	labels := []string{
 		"vc", "dc", "cluster", "esx", "pool",
@@ -202,19 +202,19 @@ func (c *virtualMachineCollector) Update(ch chan<- prometheus.Metric) (err error
 
 	err = c.apiConnect()
 	if err != nil {
-		level.Error(c.logger).Log("msg", "unable to connect", "err", err)
+		c.logger.Error("unable to connect", "err", err)
 		return err
 	}
 	defer c.apiDisconnect()
 	items, err := c.apiRetrieve()
 	if err != nil {
-		level.Error(c.logger).Log("msg", "unable retrieve vm", "err", err)
+		c.logger.Error("unable retrieve vm", "err", err)
 		return err
 	}
 
 	vc := *vcURL
 
-	level.Debug(c.logger).Log("msg", "virtual machine retrieved", "num", len(items))
+	c.logger.Debug("virtual machine retrieved", "num", len(items))
 
 	for _, item := range items {
 
@@ -222,15 +222,15 @@ func (c *virtualMachineCollector) Update(ch chan<- prometheus.Metric) (err error
 		var poolName string
 		var parents Parents
 
-		pool := getVMPool(c.ctx, c.logger, c.client.Client, item)
+		pool := getVMPool(c.ctx, c.client.Client, item)
 		if pool == nil {
-			parents = getParents(c.ctx, c.logger, c.client.Client, item.ManagedEntity)
+			parents = getParents(c.ctx, c.client.Client, item.ManagedEntity)
 			poolName = "NONE"
 		} else {
-			parents = getParents(c.ctx, c.logger, c.client.Client, *pool)
+			parents = getParents(c.ctx, c.client.Client, *pool)
 			poolName = pool.Name
 		}
-		host := getVMHostSystem(c.ctx, c.logger, c.client.Client, item)
+		host := getVMHostSystem(c.ctx, c.client.Client, item)
 		if host == nil {
 			esxName = "NONE"
 		} else {
@@ -264,7 +264,9 @@ func (c *virtualMachineCollector) Update(ch chan<- prometheus.Metric) (err error
 		mb := int64(1024 * 1024)
 
 		ch <- c.numCPU.mustNewConstMetric(float64(item.Config.Hardware.NumCPU), labelsValues...)
-		ch <- c.numCoresPerSocket.mustNewConstMetric(float64(item.Config.Hardware.NumCoresPerSocket), labelsValues...)
+		if item.Config.Hardware.NumCoresPerSocket != nil {
+			ch <- c.numCoresPerSocket.mustNewConstMetric(float64(*item.Config.Hardware.NumCoresPerSocket), labelsValues...)
+		}
 		ch <- c.memoryBytes.mustNewConstMetric(float64(int64(item.Config.Hardware.MemoryMB)*mb), labelsValues...)
 		ch <- c.overallCPUUsage.mustNewConstMetric(float64(item.Summary.QuickStats.OverallCpuUsage), labelsValues...)
 		ch <- c.overallCPUDemand.mustNewConstMetric(float64(item.Summary.QuickStats.OverallCpuDemand), labelsValues...)
@@ -312,12 +314,14 @@ func (c *virtualMachineCollector) Update(ch chan<- prometheus.Metric) (err error
 	return nil
 }
 
+// IsecAnnotation is the Intrinsec-specific metadata stored as JSON in a VM annotation.
 type IsecAnnotation struct {
 	Criticality string `json:"crit"`
 	Responsable string `json:"resp"`
 	Service     string `json:"svc"`
 }
 
+// GetIsecAnnotation parses the VM annotation, defaulting missing fields to "not defined".
 func GetIsecAnnotation(vm mo.VirtualMachine) IsecAnnotation {
 	tmp := IsecAnnotation{
 		Service:     "not defined",
@@ -328,6 +332,7 @@ func GetIsecAnnotation(vm mo.VirtualMachine) IsecAnnotation {
 	return tmp
 }
 
+// EthernetDevice describes a virtual network card of a VM.
 type EthernetDevice struct {
 	name      string
 	typeName  string
@@ -336,6 +341,7 @@ type EthernetDevice struct {
 	connected bool
 }
 
+// GetEthernetDevices returns the virtual ethernet cards configured on the VM.
 func GetEthernetDevices(vm mo.VirtualMachine) []EthernetDevice {
 	devices := object.VirtualDeviceList(vm.Config.Hardware.Device)
 	res := make([]EthernetDevice, 0, len(devices))
@@ -366,6 +372,7 @@ func GetEthernetDevices(vm mo.VirtualMachine) []EthernetDevice {
 	return res
 }
 
+// Network describes a guest network interface as reported by VMware Tools.
 type Network struct {
 	network   string
 	mac       string
@@ -373,6 +380,7 @@ type Network struct {
 	connected bool
 }
 
+// GetNetworks returns the guest network interfaces of the VM.
 func GetNetworks(vm mo.VirtualMachine) []Network {
 	res := make([]Network, 0, len(vm.Guest.Net))
 	for _, net := range vm.Guest.Net {
@@ -387,12 +395,14 @@ func GetNetworks(vm mo.VirtualMachine) []Network {
 	return res
 }
 
+// Disk describes a virtual disk attached to a VM.
 type Disk struct {
 	vmdk            string
 	capacity        int64
 	thinProvisioned bool
 }
 
+// GetDisks returns the virtual disks attached to the VM.
 func GetDisks(vm mo.VirtualMachine) []Disk {
 	disks := object.VirtualDeviceList(vm.Config.Hardware.Device).SelectByType((*types.VirtualDisk)(nil))
 	res := make([]Disk, 0, len(disks))

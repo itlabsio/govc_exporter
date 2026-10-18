@@ -17,13 +17,12 @@ package collector
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 // Namespace defines the common namespace to be used by all metrics.
@@ -50,12 +49,12 @@ const (
 )
 
 var (
-	factories        = make(map[string]func(logger log.Logger) (Collector, error))
+	factories        = make(map[string]func(logger *slog.Logger) (Collector, error))
 	collectorState   = make(map[string]*bool)
 	forcedCollectors = map[string]bool{} // collectors which have been explicitly enabled or disabled
 )
 
-func registerCollector(collector string, isDefaultEnabled bool, factory func(logger log.Logger) (Collector, error)) {
+func registerCollector(collector string, isDefaultEnabled bool, factory func(logger *slog.Logger) (Collector, error)) {
 	var helpDefaultState string
 	if isDefaultEnabled {
 		helpDefaultState = "enabled"
@@ -76,7 +75,7 @@ func registerCollector(collector string, isDefaultEnabled bool, factory func(log
 // MainCollector implements the prometheus.Collector interface.
 type MainCollector struct {
 	Collectors map[string]Collector
-	logger     log.Logger
+	logger     *slog.Logger
 }
 
 // DisableDefaultCollectors sets the collector state to false for all collectors which
@@ -95,14 +94,14 @@ func DisableDefaultCollectors() {
 // does not contain information about which flag called the action.
 // See: https://github.com/alecthomas/kingpin/issues/294
 func collectorFlagAction(collector string) func(ctx *kingpin.ParseContext) error {
-	return func(ctx *kingpin.ParseContext) error {
+	return func(_ *kingpin.ParseContext) error {
 		forcedCollectors[collector] = true
 		return nil
 	}
 }
 
 // NewMainCollector creates a new MainCollector.
-func NewMainCollector(logger log.Logger, filters ...string) (*MainCollector, error) {
+func NewMainCollector(logger *slog.Logger, filters ...string) (*MainCollector, error) {
 	f := make(map[string]bool)
 	for _, filter := range filters {
 		enabled, exist := collectorState[filter]
@@ -117,7 +116,7 @@ func NewMainCollector(logger log.Logger, filters ...string) (*MainCollector, err
 	collectors := make(map[string]Collector)
 	for key, enabled := range collectorState {
 		if *enabled {
-			collector, err := factories[key](log.With(logger, "collector", key))
+			collector, err := factories[key](logger.With("collector", key))
 			if err != nil {
 				return nil, err
 			}
@@ -148,7 +147,7 @@ func (n MainCollector) Collect(ch chan<- prometheus.Metric) {
 	wg.Wait()
 }
 
-func execute(name string, c Collector, ch chan<- prometheus.Metric, logger log.Logger) {
+func execute(name string, c Collector, ch chan<- prometheus.Metric, logger *slog.Logger) {
 	begin := time.Now()
 	err := c.Update(ch)
 	duration := time.Since(begin)
@@ -156,13 +155,13 @@ func execute(name string, c Collector, ch chan<- prometheus.Metric, logger log.L
 
 	if err != nil {
 		if IsNoDataError(err) {
-			level.Debug(logger).Log("msg", "collector returned no data", "name", name, "duration_seconds", duration.Seconds(), "err", err)
+			logger.Debug("collector returned no data", "name", name, "duration_seconds", duration.Seconds(), "err", err)
 		} else {
-			level.Error(logger).Log("msg", "collector failed", "name", name, "duration_seconds", duration.Seconds(), "err", err)
+			logger.Error("collector failed", "name", name, "duration_seconds", duration.Seconds(), "err", err)
 		}
 		success = 0
 	} else {
-		level.Debug(logger).Log("msg", "collector succeeded", "name", name, "duration_seconds", duration.Seconds())
+		logger.Debug("collector succeeded", "name", name, "duration_seconds", duration.Seconds())
 		success = 1
 	}
 	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds(), name)
@@ -187,6 +186,7 @@ func (d *typedDesc) mustNewConstMetric(value float64, labels ...string) promethe
 // ErrNoData indicates the collector found no data to collect, but had no other error.
 var ErrNoData = errors.New("collector returned no data")
 
+// IsNoDataError reports whether err is ErrNoData.
 func IsNoDataError(err error) bool {
 	return err == ErrNoData
 }
